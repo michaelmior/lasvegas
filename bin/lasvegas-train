@@ -1,0 +1,124 @@
+#!/usr/bin/env python
+
+import argparse
+import copy
+import random
+
+from keras.models import load_model
+import numpy as np
+
+from lasvegas import constants
+from lasvegas.state import create_model, roll, State
+from lasvegas import turns
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-n', '--games', default=1000, type=int,
+        help='number of games to run the training for')
+parser.add_argument('-s', '--start', default=None, type=str,
+        help='model to start training with')
+parser.add_argument('-b', '--baseline', default='random', type=str,
+        choices=['random', 'greedy', 'model'],
+        help='baseline agent type to train against')
+parser.add_argument('-m', '--model', default='model.h5', type=str,
+        help='baseline agent model to train against')
+parser.add_argument('-o', '--output', default='model.h5', type=str,
+        help='output filename of the model')
+args = parser.parse_args()
+
+if args.start:
+    model = load_model(args.start)
+else:
+    model = create_model()
+
+baseline = getattr(turns, args.baseline + '_turn')
+if args.model:
+    baseline_model = load_model(args.model)
+else:
+    baseline_model = None
+
+memory = []
+game_num = 0
+
+for _ in range(args.games):
+    print('Game %d' % game_num)
+    state = State.initial()
+    while not state.game_end():
+        # Roll the dice for player zero
+        left = state.dice_left(0)
+        r = roll(left)
+
+        # Pick random action EPSILON% of the time
+        if random.random() < constants.EPSILON:
+            p = [random.random() for _ in range(6)]
+        else:
+            p = model.predict(np.array([state.as_vector(r)]))[0]
+
+        # Check if the given action was valid and then 
+        # pick the best valid action if needed
+        valid = r[max(enumerate(p), key=lambda x: x[1])[0]] > 0
+        a = turns.choose_action(p, r)
+
+        # Make a copy of the state with the updated dice
+        new_state = copy.deepcopy(state)
+        new_state.spots[a].dice[0] += r[a]
+
+        # If no dice left, continue letting other
+        # players go until the end of the round
+        left = new_state.dice_left(0)
+        if left == 0:
+            while not new_state.round_end():
+                for i in range(1, new_state.players):
+                    new_state = baseline(new_state, i, baseline_model)
+        else:
+            for i in range(1, new_state.players):
+                new_state = baseline(new_state, i, baseline_model)
+
+        # Advance to the next round if needed
+        if new_state.round_end():
+            new_state = new_state.advance_round()
+
+        if valid:
+            # Give a reward when the game is over
+            reward = new_state.cash[0] - state.cash[0]
+            if new_state.game_end():
+                max_cash = max(new_state.cash)
+                if new_state.cash[0] == max_cash:
+                    if new_state.cash.count(max_cash) == 1:
+                        reward += constants.WIN_REWARD
+                    else:
+                        reward += constants.TIE_REWARD
+        else:
+            # Negative reward for invalid moves
+            reward = -1
+
+        # Store the transition in the learning memory
+        # (remove an old observation if needed)
+        memory.insert(0, (state, r, a, reward, new_state))
+        if len(memory) > constants.LEARNING_MEMORY_SIZE:
+            memory.pop()
+
+        # Train on a minibatch from the learning memory
+        if len(memory) >= constants.MINIBATCH_SIZE:
+            mb = random.sample(memory, constants.MINIBATCH_SIZE)
+
+            x = []
+            y = []
+
+            for (s, r, a, reward, ss) in mb:
+                x.append(state.as_vector(r))
+                if s.game_end():
+                    # If the game is over, use the final reward
+                    y.append(reward)
+                else:
+                    # Otherwise use discounted future reward
+                    p = model.predict(np.array([state.as_vector(r)]))[0]
+                    p[a] = reward / constants.CASH_NORM + p[a] * constants.DISCOUNT_RATE
+                    y.append(p)
+            model.train_on_batch(np.array(x), np.array(y))
+
+        state = new_state
+
+    print(state.cash[0])
+    game_num += 1
+
+model.save(args.model)

@@ -1,0 +1,13 @@
+CASH_NORM = 100.0
+MAX_PLAYERS = 5
+MAX_DICE = 8
+MAX_ROUNDS = 4
+EPSILON = 0.05
+DISCOUNT_RATE = 0.7
+WIN_REWARD = 100
+TIE_REWARD = 50
+LEARNING_MEMORY_SIZE = 100
+MINIBATCH_SIZE = 10
+
+INIT_BILLS = [60] * 5 + [70] * 5 + [80] * 5 + [90] * 5 + [10] * 6 + \
+             [40] * 6 + [50] * 6 + [20] * 8 + [30] * 8

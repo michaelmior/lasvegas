@@ -31,6 +31,9 @@ agent = getattr(turns, args.agent + '_turn')
 baseline = getattr(turns, args.baseline + '_turn')
 
 total = 0
+wins = 0
+draws = 0
+losses = 0
 for game in range(args.games):
     s = State.initial()
     while not s.game_end():
@@ -45,4 +48,16 @@ for game in range(args.games):
             s = s.advance_round()
     total += s.cash[0]
 
-print(total / args.games)
+    max_cash = max(s.cash)
+    if s.cash[0] != max_cash:
+        losses += 1
+    elif s.cash.count(max_cash) == 1:
+        wins += 1
+    else:
+        draws += 1
+
+print('{:>20}: {}'.format('Average score', total / args.games))
+print('{:>20}: {}'.format('Total games', args.games))
+print('{:>20}: {}'.format('Wins', wins))
+print('{:>20}: {}'.format('Draws', draws))
+print('{:>20}: {}'.format('Losses', losses))

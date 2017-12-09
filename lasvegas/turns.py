@@ -121,7 +121,7 @@ def biggest_turn(state, player, _model=None):
     # Pick the die with the largest count
     r = roll(left)
     a = max(enumerate(r), key=lambda x: x[1])[0]
-    new_state.spots[a].dice[0] += r[a]
+    new_state.spots[a].dice[player] += r[a]
 
     return new_state
 
@@ -137,6 +137,6 @@ def richest_turn(state, player, _model=None):
     # Pick the spot with the largest bill
     r = roll(left)
     a = max(enumerate(r), key=lambda x: state.spots[x[0]].bills[0])[0]
-    new_state.spots[a].dice[0] += r[a]
+    new_state.spots[a].dice[player] += r[a]
 
     return new_state

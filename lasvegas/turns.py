@@ -124,3 +124,19 @@ def biggest_turn(state, player, _model=None):
     new_state.spots[a].dice[0] += r[a]
 
     return new_state
+
+def richest_turn(state, player, _model=None):
+    """
+    Always pick the spot with the highest bill
+    """
+    new_state = copy.deepcopy(state)
+    left = state.dice_left(player)
+    if left == 0:
+        return new_state
+
+    # Pick the spot with the largest bill
+    r = roll(left)
+    a = max(enumerate(r), key=lambda x: state.spots[x[0]].bills[0])[0]
+    new_state.spots[a].dice[0] += r[a]
+
+    return new_state

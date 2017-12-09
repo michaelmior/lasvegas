@@ -13,10 +13,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-n', '--games', default=1000, type=int,
         help='number of games to run the evaluation for')
 parser.add_argument('-a', '--agent', default='model', type=str,
-        choices=['biggest', 'greedy', 'model', 'random'],
+        choices=['biggest', 'greedy', 'model', 'random', 'richest'],
         help='agent type to evaluate')
 parser.add_argument('-b', '--baseline', default='random', type=str,
-        choices=['biggest', 'greedy', 'random'],
+        choices=['biggest', 'greedy', 'random', 'richest'],
         help='baseline agent type to evaluate against')
 parser.add_argument('-m', '--model', default=None, type=str,
         help='filename of the model to use')

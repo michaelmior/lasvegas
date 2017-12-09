@@ -136,7 +136,8 @@ def richest_turn(state, player, _model=None):
 
     # Pick the spot with the largest bill
     r = roll(left)
-    a = max(enumerate(r), key=lambda x: state.spots[x[0]].bills[0])[0]
+    valid_pos = [pos for pos in enumerate(r) if pos[1] > 0]
+    a = max(valid_pos, key=lambda x: state.spots[x[0]].bills[0])[0]
     new_state.spots[a].dice[player] += r[a]
 
     return new_state

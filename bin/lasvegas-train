@@ -6,6 +6,7 @@ import random
 
 from keras.models import load_model
 import numpy as np
+from tqdm import tqdm
 
 from lasvegas import constants
 from lasvegas.state import create_model, roll, State
@@ -39,8 +40,7 @@ else:
 memory = []
 game_num = 0
 
-for _ in range(args.games):
-    print('Game %d' % game_num)
+for _ in tqdm(range(args.games)):
     state = State.initial()
     while not state.game_end():
         # Roll the dice for player zero
@@ -118,7 +118,6 @@ for _ in range(args.games):
 
         state = new_state
 
-    print(state.cash[0])
     game_num += 1
 
 model.save(args.model)

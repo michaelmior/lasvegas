@@ -4,6 +4,7 @@ from __future__ import division
 import argparse
 
 from keras.models import load_model, Sequential
+from tqdm import tqdm
 
 from lasvegas import constants
 from lasvegas.state import State
@@ -41,7 +42,7 @@ total = 0
 wins = 0
 draws = 0
 losses = 0
-for game in range(args.games):
+for game in tqdm(range(args.games)):
     s = State.initial()
     while not s.game_end():
         while not s.round_end():

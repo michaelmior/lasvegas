@@ -17,7 +17,7 @@ parser.add_argument('-n', '--games', default=1000, type=int,
 parser.add_argument('-s', '--start', default=None, type=str,
         help='model to start training with')
 parser.add_argument('-b', '--baseline', default='random', type=str,
-        choices=['random', 'greedy', 'model'],
+        choices=['biggest', 'greedy', 'model', 'random'],
         help='baseline agent type to train against')
 parser.add_argument('-m', '--model', default='model.h5', type=str,
         help='baseline agent model to train against')

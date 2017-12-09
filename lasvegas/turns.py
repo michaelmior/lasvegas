@@ -108,3 +108,19 @@ def model_turn(state, player, model):
         state = state.promote_player(1)
 
     return state
+
+def biggest_turn(state, player, _model=None):
+    """
+    Always pick the die with the largest count
+    """
+    new_state = copy.deepcopy(state)
+    left = state.dice_left(player)
+    if left == 0:
+        return new_state
+
+    # Pick the die with the largest count
+    r = roll(left)
+    a = max(enumerate(r), key=lambda x: x[1])[0]
+    new_state.spots[a].dice[0] += r[a]
+
+    return new_state

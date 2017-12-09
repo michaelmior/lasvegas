@@ -16,16 +16,23 @@ parser.add_argument('-a', '--agent', default='model', type=str,
         choices=['biggest', 'greedy', 'model', 'random', 'richest'],
         help='agent type to evaluate')
 parser.add_argument('-b', '--baseline', default='random', type=str,
-        choices=['biggest', 'greedy', 'random', 'richest'],
+        choices=['biggest', 'greedy', 'model', 'random', 'richest'],
         help='baseline agent type to evaluate against')
 parser.add_argument('-m', '--model', default=None, type=str,
         help='filename of the model to use')
+parser.add_argument('-M', '--baseline-model', default=None, type=str,
+        help='filename of the model to use for the baseline')
 args = parser.parse_args()
 
 if args.model:
     model = load_model(args.model)
 else:
     model = None
+
+if args.baseline_model:
+    baseline_model = load_model(args.baseline_model)
+else:
+    baseline_model = None
 
 agent = getattr(turns, args.agent + '_turn')
 baseline = getattr(turns, args.baseline + '_turn')
@@ -43,7 +50,7 @@ for game in range(args.games):
 
             # Run turns for all other agents
             for i in range(1, s.players):
-                s = baseline(s, i)
+                s = baseline(s, i, baseline_model)
         if s.round_num != constants.MAX_ROUNDS:
             s = s.advance_round()
     total += s.cash[0]

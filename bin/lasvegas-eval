@@ -3,7 +3,7 @@ from __future__ import division
 
 import argparse
 
-from keras.models import load_model, Sequential
+from keras.models import load_model
 from tqdm import tqdm
 
 from lasvegas import constants

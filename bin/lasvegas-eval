@@ -2,28 +2,26 @@
 from __future__ import division
 
 import argparse
-import random
 
 from keras.models import load_model
-from tqdm import tqdm
 
-from lasvegas import constants
-from lasvegas.state import State
-from lasvegas import turns
+from lasvegas import eval
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-n', '--games', default=1000, type=int,
-        help='number of games to run the evaluation for')
+                    help='number of games to run the evaluation for')
 parser.add_argument('-a', '--agent', default='model', type=str,
-        choices=['biggest', 'greedy', 'model', 'random', 'richest'],
-        help='agent type to evaluate')
+                    choices=['biggest', 'greedy', 'model', 'random',
+                             'richest'],
+                    help='agent type to evaluate')
 parser.add_argument('-b', '--baseline', default='random', type=str,
-        choices=['biggest', 'changing', 'greedy', 'model', 'random', 'richest'],
-        help='baseline agent type to evaluate against')
+                    choices=['biggest', 'changing', 'greedy', 'model',
+                             'random', 'richest'],
+                    help='baseline agent type to evaluate against')
 parser.add_argument('-m', '--model', default=None, type=str,
-        help='filename of the model to use')
+                    help='filename of the model to use')
 parser.add_argument('-M', '--baseline-model', default=None, type=str,
-        help='filename of the model to use for the baseline')
+                    help='filename of the model to use for the baseline')
 args = parser.parse_args()
 
 if args.model:
@@ -36,49 +34,11 @@ if args.baseline_model:
 else:
     baseline_model = None
 
-agent = getattr(turns, args.agent + '_turn')
+stats = eval.eval_model(args.agent, args.games, args.baseline,
+                        model, baseline_model)
 
-if args.baseline != 'changing':
-    baseline = [getattr(turns, args.baseline + '_turn')] * (constants.MAX_PLAYERS - 1)
-
-total = 0
-wins = 0
-draws = 0
-losses = 0
-for game in tqdm(range(args.games)):
-    s = State.initial()
-
-    # Pick a new strategy for each player
-    if args.baseline == 'changing':
-        baseline = [getattr(turns, random.choice([
-            'biggest',
-            'greedy',
-            'random',
-            'richest'
-        ]) + '_turn') for _ in range(constants.MAX_PLAYERS - 1)]
-
-    while not s.game_end():
-        while not s.round_end():
-            # Run the agent we're evaluating
-            s = agent(s, 0, model)
-
-            # Run turns for all other agents
-            for i in range(1, s.players):
-                s = baseline[i - 1](s, i, baseline_model)
-        if s.round_num != constants.MAX_ROUNDS:
-            s = s.advance_round()
-    total += s.cash[0]
-
-    max_cash = max(s.cash)
-    if s.cash[0] != max_cash:
-        losses += 1
-    elif s.cash.count(max_cash) == 1:
-        wins += 1
-    else:
-        draws += 1
-
-print('{:>20}: {}'.format('Average score', total / args.games))
+print('{:>20}: {}'.format('Average score', stats['total'] / args.games))
 print('{:>20}: {}'.format('Total games', args.games))
-print('{:>20}: {}'.format('Wins', wins))
-print('{:>20}: {}'.format('Draws', draws))
-print('{:>20}: {}'.format('Losses', losses))
+print('{:>20}: {}'.format('Wins', stats['wins']))
+print('{:>20}: {}'.format('Draws', stats['draws']))
+print('{:>20}: {}'.format('Losses', stats['losses']))

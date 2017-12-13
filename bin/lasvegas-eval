@@ -2,6 +2,7 @@
 from __future__ import division
 
 import argparse
+import random
 
 from keras.models import load_model
 from tqdm import tqdm
@@ -17,7 +18,7 @@ parser.add_argument('-a', '--agent', default='model', type=str,
         choices=['biggest', 'greedy', 'model', 'random', 'richest'],
         help='agent type to evaluate')
 parser.add_argument('-b', '--baseline', default='random', type=str,
-        choices=['biggest', 'greedy', 'model', 'random', 'richest'],
+        choices=['biggest', 'changing', 'greedy', 'model', 'random', 'richest'],
         help='baseline agent type to evaluate against')
 parser.add_argument('-m', '--model', default=None, type=str,
         help='filename of the model to use')
@@ -36,7 +37,9 @@ else:
     baseline_model = None
 
 agent = getattr(turns, args.agent + '_turn')
-baseline = getattr(turns, args.baseline + '_turn')
+
+if args.baseline != 'changing':
+    baseline = [getattr(turns, args.baseline + '_turn')] * (constants.MAX_PLAYERS - 1)
 
 total = 0
 wins = 0
@@ -44,6 +47,16 @@ draws = 0
 losses = 0
 for game in tqdm(range(args.games)):
     s = State.initial()
+
+    # Pick a new strategy for each player
+    if args.baseline == 'changing':
+        baseline = [getattr(turns, random.choice([
+            'biggest',
+            'greedy',
+            'random',
+            'richest'
+        ]) + '_turn') for _ in range(constants.MAX_PLAYERS - 1)]
+
     while not s.game_end():
         while not s.round_end():
             # Run the agent we're evaluating
@@ -51,7 +64,7 @@ for game in tqdm(range(args.games)):
 
             # Run turns for all other agents
             for i in range(1, s.players):
-                s = baseline(s, i, baseline_model)
+                s = baseline[i - 1](s, i, baseline_model)
         if s.round_num != constants.MAX_ROUNDS:
             s = s.advance_round()
     total += s.cash[0]

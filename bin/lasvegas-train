@@ -18,7 +18,7 @@ parser.add_argument('-n', '--games', default=1000, type=int,
 parser.add_argument('-s', '--start', default=None, type=str,
         help='model to start training with')
 parser.add_argument('-b', '--baseline', default='random', type=str,
-        choices=['biggest', 'greedy', 'model', 'random', 'richest'],
+        choices=['biggest', 'changing', 'greedy', 'model', 'random', 'richest'],
         help='baseline agent type to train against')
 parser.add_argument('-m', '--model', default='model.h5', type=str,
         help='baseline agent model to train against')
@@ -31,7 +31,8 @@ if args.start:
 else:
     model = create_model()
 
-baseline = getattr(turns, args.baseline + '_turn')
+if args.baseline != 'changing':
+    baseline = [getattr(turns, args.baseline + '_turn')] * (constants.MAX_PLAYERS - 1)
 if args.model:
     baseline_model = load_model(args.model)
 else:
@@ -42,6 +43,16 @@ game_num = 0
 
 for _ in tqdm(range(args.games)):
     state = State.initial()
+
+    # Pick a new strategy for each player
+    if args.baseline == 'changing':
+        baseline = [getattr(turns, random.choice([
+            'biggest',
+            'greedy',
+            'random',
+            'richest'
+        ]) + '_turn') for _ in range(constants.MAX_PLAYERS - 1)]
+
     while not state.game_end():
         # Roll the dice for player zero
         left = state.dice_left(0)
@@ -68,10 +79,10 @@ for _ in tqdm(range(args.games)):
         if left == 0:
             while not new_state.round_end():
                 for i in range(1, new_state.players):
-                    new_state = baseline(new_state, i, baseline_model)
+                    new_state = baseline[i - 1](new_state, i, baseline_model)
         else:
             for i in range(1, new_state.players):
-                new_state = baseline(new_state, i, baseline_model)
+                new_state = baseline[i - 1](new_state, i, baseline_model)
 
         # Advance to the next round if needed
         if new_state.round_end():

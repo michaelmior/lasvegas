@@ -15,7 +15,7 @@ parser.add_argument('-s', '--start', default=None, type=str,
                     help='model to start training with')
 parser.add_argument('-b', '--baseline', default='random', type=str,
                     choices=['biggest', 'changing', 'greedy', 'model',
-                             'random', 'richest'],
+                             'random', 'richest', 'self'],
                     help='baseline agent type to train against')
 parser.add_argument('-m', '--model', default='model.h5', type=str,
                     help='baseline agent model to train against')
@@ -29,8 +29,11 @@ else:
     model = create_model()
 
 # If our baseline is a model, load it
-if args.model:
+if args.baseline == 'model':
     baseline_model = load_model(args.model)
+elif args.baseline == 'self':
+    args.baseline = 'model'
+    baseline_model = model
 else:
     baseline_model = None
 

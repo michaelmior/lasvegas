@@ -32,6 +32,24 @@ space = {
     'TIE_REWARD': hp.uniform('TIE_REWARD', 1, 500),
     'WIN_REWARD': hp.uniform('WIN_REWARD', 1, 1000),
 
+    'kernel_initializer': hp.choice('kernel_initializer', [
+        'lecun_uniform',
+        'lecun_normal',
+        'glorot_uniform',
+        'random_uniform',
+        'random_normal'
+    ]),
+    'activation': hp.choice('activation', ['relu', 'softmax', 'sigmoid']),
+    'optimizer': hp.choice('optimizer', [
+        'rmsprop',
+        'sgd',
+        'adagrad',
+        'adadelta',
+        'adam',
+        'adamax',
+        'nadam'
+    ]),
+
     'training_games': args.training_games,
     'eval_games': args.eval_games
 }

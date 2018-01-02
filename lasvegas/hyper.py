@@ -22,7 +22,9 @@ def objective(params):
     for (key, val) in params.items():
         setattr(constants, key, val)
 
-    model = create_model()
+    model = create_model(kernel_initializer=params['kernel_initializer'],
+                         activation=params['activation'],
+                         optimizer=params['optimizer'])
     train.train_model(model,
                       params['training_games'] // params['MINIBATCH_SIZE'],
                       'changing')

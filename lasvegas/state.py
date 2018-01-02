@@ -201,18 +201,21 @@ def get_dimensions(players):
 
     return dimensions
 
-def create_model(players=constants.MAX_PLAYERS):
+def create_model(players=constants.MAX_PLAYERS,
+                 kernel_initializer='lecun_uniform',
+                 activation='sigmoid',
+                 optimizer='adam'):
     """
     Construct a new neural net ready for training
     """
     dims = get_dimensions(players)
     model = Sequential([
-        Dense(dims, kernel_initializer='lecun_uniform', input_shape=(dims,)),
-        Activation('relu'),
-        Dense(dims // 2, kernel_initializer='lecun_uniform'),
-        Activation('relu'),
-        Dense(6, kernel_initializer='lecun_uniform'),
+        Dense(dims, kernel_initializer=kernel_initializer, input_shape=(dims,)),
+        Activation(activation),
+        Dense(dims // 2, kernel_initializer=kernel_initializer),
+        Activation(activation),
+        Dense(6, kernel_initializer=kernel_initializer),
         Activation('linear')
     ])
-    model.compile(optimizer='rmsprop', loss='mean_squared_error')
+    model.compile(optimizer=optimizer, loss='mean_squared_error')
     return model
